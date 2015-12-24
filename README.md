@@ -1,5 +1,36 @@
 # Reproducing IndexZero's Command Line HTTP Server for NodeJS #
 
+* If you want to just get this thing up and running *
+
+```
+git clone https://github.com/ammarm08/http-service
+mkdir http-service
+npm install
+
+// to use from anywhere, just set up an alias in your terminal
+alias "my-server" = "node ../<path>/<to>/http-service/bin/server"
+
+/* usage (from root of the directory you're working on) */
+
+// help
+my-server -h
+
+// defaults --> port 8080, root = ./public
+my-server
+
+// configure as you like --> port 8000, root = ./
+my-server -p 8000 -r ./ 
+
+// open up to localhost:8000 and your files should be served up.
+// as of now, this server looks for an index.html, so if your main
+// html filed is named anything else, it won't serve.
+
+// exit
+ctrl-c
+```
+
+-----
+
 There's no better time to become a self-taught programmer. The amount of free and high-quality resources available is astounding. However, as I've tried to delve deeper into concepts that are otherwise covered at CS departments around the world, I've found it strangely difficult (and boring).
 
 For starters, while I love Coursera, many of its courses water down content and hold your hand a tad too much. On the flip side, working through Stanford/CMU/MIT/Berkeley coursework leads to a lot of broken links, cryptic lecture notes, and lab/project work that requires a valid student login. When the amount of reading exceeds the amount of coding, I get bored + frustrated.

@@ -69,6 +69,7 @@ try {
             response.writeHead(err.status, err.headers);
             response.end();
           }
+          log('['.grey+'SERVED'.yellow+'] '.grey + request.url); // logs a message when something is served
         })
       }).resume();
     }).listen(port);

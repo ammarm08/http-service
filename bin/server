@@ -1,84 +1,13 @@
-var path = require('path');
-var colors = require('colors');
-var staticServer = require('node-static');
-var http = require('http');
-var argv = require('optimist').argv;
+// Import and invoke from lib/http-server
+var HTTPServer = require('../lib/http-server')();
 
-/*
-Variables and Function Declarations
-*/
+// start the server
+HTTPServer.start();
 
-// options are now enclosed in their own options object
+// when an interruption is signalled, have the server log a stop message,
+// then exit out of the process/program.
 
-var options = {
-  PORT : argv.p || 8080,
-  ADDRESS : argv.a || "localhost",
-  ROOT : argv.r || "./public",
-  CACHE : argv.c || 3600,
-};
-
-options.FILE_SERVER = new(staticServer.Server)(options.ROOT, { cache: parseInt(options.CACHE) });
-
-options.HELP_MENU = [
-  "",
-  "usage: node bin/server [options]",
-  "",
-  "options:",
-  " -p Port assignment [8080 by default]",
-  " -a Address assignment [localhost by default]",
-  " -r Root assignment [./public by default]",
-  " -c Cache expiration assignment [3600 by default]",
-  " -s Suppress logging from output",
-  " -h Pull up the help menu in case you freak out"
-].join('\n');
-
-function log (message) {
-  if (!argv.s && !argv.silent) console.log(message);
-};
-
-// responsible for firing up our static server
-
-function createServer(options) {
-  log("Starting up web server for: ".yellow + options.ROOT.cyan + " on port: ".yellow + options.PORT.toString().cyan);
-
-  http.createServer(function(request, response) {
-    request.addListener('end', function() {
-      options.FILE_SERVER.serve(request, response, function(err, data) {
-        errorHandler(request, response, err);
-        log('['.grey+'SERVED'.yellow+'] '.grey + request.url);
-      })
-    }).resume();
-  }).listen(options.PORT, options.ADDRESS);
-
-  log("Web server started at ".green + options.ADDRESS.cyan + ":".cyan + options.PORT.toString().cyan);
-  log("Press Ctrl-C to stop server at any time.");
-};
-
-// abstracted out error handling to make createServer easier to read
-
-function errorHandler(request, response, err) {
-  if (err) {
-    console.error("Error serving " + request.url + " - " + err.message);
-    response.writeHead(err.status, err.headers);
-    response.end();
-  }
-};
-
-// set up event listener for an interrupt event signaled by current process (like a CTRL-C)
-
-function interruptHandler() {
-  process.on("SIGINT", function() {
-    log("Web server stopped".red);
-    return process.exit();
-  })
-};
-
-// a tidy little function that initializes the interrupt handler, reacts to the -h flag, and creates the server
-
-function runServer(options) {
-  interruptHandler();
-  if (argv.h) return console.log(options.HELP_MENU);
-  createServer(options);
-};
-
-runServer(options);
+process.on('SIGINT', function() {
+  HTTPServer.log('http-server stopped.'.red);
+  return process.exit();
+});

@@ -8,9 +8,18 @@ var argv = require('optimist').argv;
 Variables and Function Declarations
 */
 
-var port, address, root, cache, fileServer;
+// options are now enclosed in their own options object
 
-var helpMenu = [
+var options = {
+  PORT : argv.p || 8080,
+  ADDRESS : argv.a || "localhost",
+  ROOT : argv.r || "./public",
+  CACHE : argv.c || 3600,
+};
+
+options.FILE_SERVER = new(staticServer.Server)(options.ROOT, { cache: parseInt(options.CACHE) });
+
+options.HELP_MENU = [
   "",
   "usage: node bin/server [options]",
   "",
@@ -27,53 +36,49 @@ function log (message) {
   if (!argv.s && !argv.silent) console.log(message);
 };
 
-/*
-Procedure
-*/
+// responsible for firing up our static server
 
+function createServer(options) {
+  log("Starting up web server for: ".yellow + options.ROOT.cyan + " on port: ".yellow + options.PORT.toString().cyan);
 
-if (argv.h) return console.log(helpMenu);
+  http.createServer(function(request, response) {
+    request.addListener('end', function() {
+      options.FILE_SERVER.serve(request, response, function(err, data) {
+        errorHandler(request, response, err);
+        log('['.grey+'SERVED'.yellow+'] '.grey + request.url);
+      })
+    }).resume();
+  }).listen(options.PORT, options.ADDRESS);
 
-try {
-
-  // we've assigned address ("host") to one determined by user, or localhost by default.
-  // cache refers to the length of time in seconds that served files are cached
-
-  port = argv.p || 8080; 
-  address = argv.a || "localhost";
-  root = argv.r || "./public"; 
-  cache = argv.c || 3600;
-  fileServer = new(staticServer.Server)(root, { cache: parseInt(cache) }); // pass in catch option to node-static
-
-  log("Starting up web server for: ".yellow + root.cyan + " on port: ".yellow + port.toString().cyan);
-
-  try {
-    http.createServer(function (request, response) {
-      request.addListener('end', function () {
-        fileServer.serve(request, response, function(err, data) {
-          if (err) {
-            console.error("Error serving " + request.url + " - " + err.message);
-            response.writeHead(err.status, err.headers);
-            response.end();
-          }
-          log('['.grey+'SERVED'.yellow+'] '.grey + request.url);
-        })
-      }).resume();
-    }).listen(port, address); // we pass the address option to listen()
-  } catch (err) {
-    return callback({
-      message: err.message
-    });
-  }
-
-  log("Web server started at ".green + address.cyan + ":".cyan + port.toString().cyan);
+  log("Web server started at ".green + options.ADDRESS.cyan + ":".cyan + options.PORT.toString().cyan);
   log("Press Ctrl-C to stop server at any time.");
+};
 
+// abstracted out error handling to make createServer easier to read
+
+function errorHandler(request, response, err) {
+  if (err) {
+    console.error("Error serving " + request.url + " - " + err.message);
+    response.writeHead(err.status, err.headers);
+    response.end();
+  }
+};
+
+// set up event listener for an interrupt event signaled by current process (like a CTRL-C)
+
+function interruptHandler() {
   process.on("SIGINT", function() {
     log("Web server stopped".red);
     return process.exit();
   })
+};
 
-} catch (err) {
-  log(err, console.dir(options));
-}
+// a tidy little function that initializes the interrupt handler, reacts to the -h flag, and creates the server
+
+function runServer(options) {
+  interruptHandler();
+  if (argv.h) return console.log(options.HELP_MENU);
+  createServer(options);
+};
+
+runServer(options);

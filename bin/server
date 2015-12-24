@@ -1,11 +1,3 @@
-/*
-Dependencies
--- Eyes => add pretty colors to your boring NodeJS CLI
--- Node-Static => static-file server module (https://github.com/cloudhead/node-static)
--- HTTP => Node's built-in HTTP server-client module (https://nodejs.org/api/http.html#http_http)
--- Optimist => A (now deprecated) argument-parsing module
-*/
-
 var path = require('path');
 var colors = require('colors');
 var staticServer = require('node-static');
@@ -16,21 +8,20 @@ var argv = require('optimist').argv;
 Variables and Function Declarations
 */
 
-var port, root, file;
-
-// a line-spaced help menu to show users their options
+var port, address, root, cache, fileServer;
 
 var helpMenu = [
-  "usage: home [options]",
+  "",
+  "usage: node bin/server [options]",
   "",
   "options:",
   " -p Port assignment [8080 by default]",
+  " -a Address assignment [localhost by default]",
   " -r Root assignment [./public by default]",
+  " -c Cache expiration assignment [3600 by default]",
   " -s Suppress logging from output",
   " -h Pull up the help menu in case you freak out"
 ].join('\n');
-
-// log a message to the console if it isn't silent or if we aren't suppressing it
 
 function log (message) {
   if (!argv.s && !argv.silent) console.log(message);
@@ -40,25 +31,21 @@ function log (message) {
 Procedure
 */
 
-// show our help menu if user inputs an -h flag
 
 if (argv.h) return console.log(helpMenu);
 
 try {
 
-  port = argv.p || 8080; // -p: port assignment (defaults to 8080)
-  root = argv.r || "./public"; // -r: root assignment (defaults to "./public")
+  // we've assigned address ("host") to one determined by user, or localhost by default.
+  // cache refers to the length of time in seconds that served files are cached
 
-  // create a node-static server instance to serve all files and folders in the root folder.
-
-  fileServer = new(staticServer.Server)(root);
+  port = argv.p || 8080; 
+  address = argv.a || "localhost";
+  root = argv.r || "./public"; 
+  cache = argv.c || 3600;
+  fileServer = new(staticServer.Server)(root, { cache: parseInt(cache) }); // pass in catch option to node-static
 
   log("Starting up web server for: ".yellow + root.cyan + " on port: ".yellow + port.toString().cyan);
-
-  // serve up that static file server instance through basic http, listening on the assigned port.
-  // we add an event listener on each request such that when that request is fully consumed and emits
-  // an "end" signal, we serve up the request and response (our node-static server instance).
-  // we also handle any errors by logging the error and writing a response back to the client.
 
   try {
     http.createServer(function (request, response) {
@@ -69,21 +56,18 @@ try {
             response.writeHead(err.status, err.headers);
             response.end();
           }
-          log('['.grey+'SERVED'.yellow+'] '.grey + request.url); // logs a message when something is served
+          log('['.grey+'SERVED'.yellow+'] '.grey + request.url);
         })
       }).resume();
-    }).listen(port);
+    }).listen(port, address); // we pass the address option to listen()
   } catch (err) {
     return callback({
       message: err.message
     });
   }
 
-  log("Web server started at ".green + port.toString().cyan);
+  log("Web server started at ".green + address.cyan + ":".cyan + port.toString().cyan);
   log("Press Ctrl-C to stop server at any time.");
-
-  // when process receives an interrupt signal (AKA a CTRL-C from keyboard),
-  // stop the server and exit
 
   process.on("SIGINT", function() {
     log("Web server stopped".red);

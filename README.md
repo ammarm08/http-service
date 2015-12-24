@@ -55,9 +55,13 @@ It could look like this.
 ```
 
 So if you look at the code in both bin/server and lib/http-server, it should look pretty clear:
+
 1. Import http-server.js and invoke it.
+
 2. Run "Start".
+
 3. Handle process interupts.
+
 
 The key to linking bin/server and lib/http-server is Node's built-in module system, which imports/exports dependencies
 using the "Require" + "Module.exports" pattern.

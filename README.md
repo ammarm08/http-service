@@ -21,3 +21,73 @@ Original: https://github.com/indexzero/http-server/
 ### 3_Refactoring_Server_Code ###
 
 In this branch, we'll be taking a look at our bin/server file and refactoring it. Because right now it's a bit redundant with its try-catch procedure. This round of refactoring definitely has room for improvement (especially in terms of error handling), but our primary goal right now is to make it easier to read.
+
+Check out the commits on this branch to see the different iterations this refactor took. Ultimately, this is the idea behind the refactor:
+
+1. lib/http-server.js will house all the internal server logic
+2. bin/server will simply be the interface for running the server
+
+Steps:
+
+```
+mkdir lib
+touch lib/http-server.js
+```
+
+First we start with sketching out #2 (bin/server as the interface for getting the server running).
+It could look something like this.
+
+```
+// 1 - import http server module (that we will write later)
+// 2 - create a new instance of this http server
+// 3 - start the server
+// 4 - handle process interrupts (aka exiting)
+```
+
+We then move on to sketching out #1 (lib/http-server.js as where all the server logic gets set up).
+It could look like this.
+
+```
+// 1 - import colors, optimist's argument parser, node's http module, and node-static. we need these.
+// 2 - set up our options as we did before (port, address, root, cache, file, etc)
+// 3 - write our handler functions (log, createServer, errorHandler, etc)
+// 4 - use these handlers to execute one main "Start" function
+```
+
+So if you look at the code in both bin/server and lib/http-server, it should look pretty clear:
+1. Import http-server.js and invoke it.
+2. Run "Start".
+3. Handle process interupts.
+
+The key to linking bin/server and lib/http-server is Node's built-in module system, which imports/exports dependencies
+using the "Require" + "Module.exports" pattern.
+
+You'll see in lib/http-server how this works out. We encapsulated our variables and functions in module.exports, but we only have this module return the "start" and "log" functions. This ends up defining the interface/API that files importing http-server from elsewhere in the project directory can use.
+
+```
+// lib/http-server.js
+
+module.exports = function() {
+  ...
+
+  // the "API"
+  return {
+    start: start,
+    log: log
+  }
+  ...
+}
+
+// bin/server
+
+var HTTPServer = require("../lib/http-server.js")(); // import and invoke
+HTTPServer.start() // bam.
+process.on("SIGINT", function() {
+  HTTPServer.log(...) // bam.
+  ...
+})
+...
+
+```
+
+There are many other ways to go about this, and I'm sure many of them are much better than what I've done above. But hey, this is pretty cool.

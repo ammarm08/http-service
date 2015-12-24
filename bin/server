@@ -25,7 +25,7 @@ var helpMenu = [
   "",
   "options:",
   " -p Port assignment [8080 by default]",
-  " -r Root assignment [./ by default]",
+  " -r Root assignment [./public by default]",
   " -s Suppress logging from output",
   " -h Pull up the help menu in case you freak out"
 ].join('\n');

@@ -18,16 +18,6 @@ Original: https://github.com/indexzero/http-server/
 
 ### 1_Basic_CLI_Service ###
 ### 2_Server_Configuration_Options ###
+### 3_Refactoring_Server_Code ###
 
-This branch is pretty straight-forward. Now that we know we can serve a basic html file in our ./public folder, we want users to be able to quickly set server configuration on the fly, from the Command Line.
-
-What are some basic options they should be able to have?
-
-- Port assignment (ex. "3000")
-- Address/Host assignment (ex. "localhost")
-- Root assignment (ex. "./public" or "./dist")
-- Cache assignment (ex. "3600", as in, "I want all served files to be cached for 3600 seconds")
-
-These should be good enough options for now. Things will begin to get interesting as we start testing out static file serving beyond just a single html file.
-
-Check out bin/server for the code + comments.
+In this branch, we'll be taking a look at our bin/server file and refactoring it. Because right now it's a bit redundant with its try-catch procedure. This round of refactoring definitely has room for improvement (especially in terms of error handling), but our primary goal right now is to make it easier to read.

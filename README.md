@@ -1,10 +1,10 @@
 # Reproducing IndexZero's Command Line HTTP Server for NodeJS #
 
-* If you want to just get this thing up and running *
+If you want to just get this thing up and running
 
 ```
 git clone https://github.com/ammarm08/http-service
-mkdir http-service
+cd http-service
 npm install
 
 // to use from anywhere, just set up an alias in your terminal
